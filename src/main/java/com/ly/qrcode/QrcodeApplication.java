@@ -150,7 +150,7 @@ public class QrcodeApplication {
 
 		var page = driver.findElement(By.id("conteudo"));
 
-
+		System.out.println(page.getText());
 	}
 
 
