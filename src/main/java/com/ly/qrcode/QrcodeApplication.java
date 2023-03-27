@@ -25,15 +25,22 @@ import java.util.Map;
 @SpringBootApplication
 public class QrcodeApplication {
 
+	static WebDriver driver;
 	public static void main(String[] args) {
 
+		String chromeDriverPath = "/home/luiz/Downloads/chromedriver" ;
 		SpringApplication.run(QrcodeApplication.class, args);
-
+		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+		driver= new ChromeDriver(options);
 
 		try {
 
 			//qrCodeCreate();
-			qrCodeRead();
+			qrCodeRead("cupom.png");
+			System.out.println("\n\nCUPOM 2:\n");
+			qrCodeRead("cupom2.png");
 
 		} catch (WriterException e) {
 			throw new RuntimeException(e);
@@ -107,14 +114,10 @@ public class QrcodeApplication {
 		System.out.println("QR Code Generated!!! ");
 	}
 
-	public static void qrCodeRead()
+	public static void qrCodeRead(String imgFile)
 			throws WriterException, IOException,
 			NotFoundException
 	{
-
-		// Path where the QR code is saved
-		String path = "cupom.png";
-
 		// Encoding charset
 		String charset = "UTF-8";
 
@@ -125,20 +128,13 @@ public class QrcodeApplication {
 		hashMap.put(EncodeHintType.ERROR_CORRECTION,
 				ErrorCorrectionLevel.L);
 
-		var result = readQR(path, charset, hashMap);
+		var result = readQR(imgFile, charset, hashMap);
 		System.out.println("QRCode output: " + result);
 
 		scrap(result);
 	}
 
 	public static void scrap(String nfeUrl) throws IOException {
-
-		String chromeDriverPath = "/home/luiz/Downloads/chromedriver" ;
-
-		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-		ChromeOptions options = new ChromeOptions();
-		options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
-		WebDriver driver = new ChromeDriver(options);
 
 		driver.get(nfeUrl);
 
