@@ -144,9 +144,54 @@ public class QrcodeApplication {
 		//Switch to the frame
 		driver.switchTo().frame(iframe);
 
-		var page = driver.findElement(By.id("conteudo"));
+		//var page = driver.findElement(By.id("conteudo"));
 
-		System.out.println(page.getText());
+		System.out.println("Empresa: ");
+		var p1 = driver.findElement(By.className("txtTopo"));
+		System.out.println(p1.getText());
+
+		var p3 = driver.findElements(By.className("text"));
+		System.out.println("CNPJ: ");
+		System.out.println(p3.get(0).getText());
+		System.out.println("Endereço: ");
+		System.out.println(p3.get(1).getText());
+
+		System.out.println("\ntab: ");
+		var p4 = driver.findElement(By.id("tabResult"));
+		System.out.println(p4.getText());
+
+
+		System.out.println("\nProd: ");
+		var p7 = driver.findElements(By.className("txtTit"));
+		var p8 = driver.findElements(By.className("Rqtd"));
+		var p9 = driver.findElements(By.className("RUN"));
+		var p10 = driver.findElements(By.className("RvlUnit"));
+		var p11 = driver.findElements(By.className("valor"));
+		if (p7.size() > 0){
+			for (int i = 0; i < p7.size(); i+=2){
+				System.out.println(p7.get(i).getText() + " "
+						+ p8.get(i/2).getText().replace("Qtde.:", "") +
+						" " + p9.get(i/2).getText().replace("UN: ", "") +
+						" x " + p10.get(i/2).getText().replace("Vl. Unit.:   ", "R$ ") +
+						" Total: " + p11.get(i/2).getText()
+				);
+			}
+		}
+
+		System.out.println("\nTotal: ");
+		var p5 = driver.findElements(By.id("linhaTotal"));
+		if (p5.size() > 0){
+			for (int i = 0; i < p5.size(); i++){
+				System.out.println(i + ": " + p5.get(i).getText());
+			}
+		}
+
+
+
+		System.out.println("\nEmissão: ");
+		var p6 = driver.findElement(By.className("ui-li-static"));
+		System.out.println(p6.getText());
+
 	}
 
 
