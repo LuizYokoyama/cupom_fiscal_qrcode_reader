@@ -17,7 +17,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.imageio.ImageIO;
 import java.io.*;
-import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +38,9 @@ public class QrcodeApplication {
 		try {
 
 			//qrCodeCreate();
+			System.out.println("\nTESTE CUPOM 1:");
 			qrCodeRead("cupom.png");
-			System.out.println("\n\nCUPOM 2:\n");
+			System.out.println("\nTESTE CUPOM 2:");
 			qrCodeRead("cupom2.png");
 
 		} catch (WriterException e) {
@@ -131,10 +132,11 @@ public class QrcodeApplication {
 		var result = readQR(imgFile, charset, hashMap);
 		System.out.println("QRCode output: " + result);
 
-		scrap(result);
+		//scrapPrint(result);
+		System.out.println(scrap(result));
 	}
 
-	public static void scrap(String nfeUrl) throws IOException {
+	public static void scrapPrint(String nfeUrl) throws IOException {
 
 		driver.get(nfeUrl);
 
@@ -160,7 +162,6 @@ public class QrcodeApplication {
 		var p4 = driver.findElement(By.id("tabResult"));
 		System.out.println(p4.getText());
 
-
 		System.out.println("\nProd: ");
 		var p7 = driver.findElements(By.className("txtTit"));
 		var p8 = driver.findElements(By.className("Rqtd"));
@@ -182,15 +183,102 @@ public class QrcodeApplication {
 		var p5 = driver.findElements(By.id("linhaTotal"));
 		if (p5.size() > 0){
 			for (int i = 0; i < p5.size(); i++){
-				System.out.println(i + ": " + p5.get(i).getText());
+				System.out.println(i + ": " + p5.get(i).findElement(By.tagName("label")).getText());
+				System.out.println(i + ": " + p5.get(i).findElement(By.className("totalNumb")).getText());
 			}
 		}
 
-
-
 		System.out.println("\nEmissão: ");
 		var p6 = driver.findElement(By.className("ui-li-static"));
-		System.out.println(p6.getText());
+		System.out.println(p6.getText().split(" Emissão: ")[1].split("- Via Consumidor")[0]);
+
+	}
+
+	public static CupomEntity scrap(String nfeUrl) throws IOException {
+
+		driver.get(nfeUrl);
+
+		//Store the web element
+		WebElement iframe = driver.findElement(By.className("iframe-danfe-nfce"));
+
+		//Switch to the frame
+		driver.switchTo().frame(iframe);
+
+		CupomEntity cupom = new CupomEntity();
+
+		cupom.setNomeEmpresa(driver.findElement(By.className("txtTopo")).getText());
+
+		cupom.setCnpj(driver.findElements(By.className("text")).get(0).getText().replace("CNPJ: ", ""));
+
+		cupom.setEndereco(driver.findElements(By.className("text")).get(1).getText());
+
+		List<ItenEntity> itens = new ArrayList<>();
+		var nomeItem = driver.findElements(By.className("txtTit"));
+		var qtd = driver.findElements(By.className("Rqtd"));
+		var unidade = driver.findElements(By.className("RUN"));
+		var valorUnit = driver.findElements(By.className("RvlUnit"));
+		var valorTotalItem = driver.findElements(By.className("valor"));
+		if (nomeItem.size() > 0){
+			for (int i = 0; i < nomeItem.size(); i+=2){
+				ItenEntity itenEntity = new ItenEntity();
+
+				itenEntity.setNomeItem(nomeItem.get(i).getText());
+				itenEntity.setQtd(Integer.parseInt(qtd.get(i/2).getText().replace("Qtde.:", "")));
+				itenEntity.setUnidade(unidade.get(i/2).getText().replace("UN: ", ""));
+				itenEntity.setValorUnit(Float.parseFloat(valorUnit.get(i/2).getText()
+						.replace("Vl. Unit.:   ", "").replace(",",".")));
+				itenEntity.setValorTotalItem(Float.parseFloat(valorTotalItem.get(i/2).getText()
+						.replace(",",".")));
+				itens.add(itenEntity);
+			}
+		}
+		cupom.setItenEntityList(itens);
+
+		var linhaTotal = driver.findElements(By.id("linhaTotal"));
+		if (linhaTotal.size() > 0){
+			for (int i = 0; i < linhaTotal.size(); i++){
+				switch (linhaTotal.get(i).findElement(By.tagName("label")).getText()){
+					case "Qtd. total de itens:":
+						cupom.setQtdTotalItens(Integer.parseInt(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()));
+						break;
+					case "Valor a pagar R$:":
+						cupom.setValorPagar(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Cartão de Crédito":
+						cupom.setCartaoCredito(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Cartão de Débito":
+						cupom.setCartaoDebito(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Dinheiro":
+						cupom.setDinheiro(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Pix":
+						cupom.setPix(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Troco":
+						cupom.setTroco(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+					case "Informação dos Tributos Totais Incidentes (Lei Federal 12.741/2012) R$":
+						cupom.setTributos(Float.parseFloat(linhaTotal.get(i).findElement(By.className("totalNumb")).getText()
+								.replace(",",".")));
+						break;
+				}
+			}
+		}
+
+		cupom.setEmissao(
+				driver.findElement(By.className("ui-li-static")).
+				getText().split(" Emissão: ")[1].split("- Via Consumidor")[0]
+		);
+
+		return cupom;
 
 	}
 
