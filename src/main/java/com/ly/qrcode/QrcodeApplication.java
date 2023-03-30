@@ -42,6 +42,10 @@ public class QrcodeApplication {
 			qrCodeRead("cupom.png");
 			System.out.println("\nTESTE CUPOM 2:");
 			qrCodeRead("cupom2.png");
+			System.out.println("\nTESTE CUPOM 3:");
+			qrCodeRead("cupom3.png");
+			System.out.println("\nTESTE CUPOM 4:");
+			qrCodeRead("cupom4.png");
 
 		} catch (WriterException e) {
 			throw new RuntimeException(e);
@@ -127,7 +131,7 @@ public class QrcodeApplication {
 				ErrorCorrectionLevel>();
 
 		hashMap.put(EncodeHintType.ERROR_CORRECTION,
-				ErrorCorrectionLevel.L);
+				ErrorCorrectionLevel.H);
 
 		var result = readQR(imgFile, charset, hashMap);
 		System.out.println("QRCode output: " + result);
